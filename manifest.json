@@ -1,6 +1,6 @@
 {
-  "name": "字词错题本",
-  "short_name": "字词错题",
+  "name": "错词斩",
+  "short_name": "错词斩",
   "description": "字词默写复习工具，SRS间隔重复记忆",
   "start_url": "./index.html",
   "display": "standalone",
