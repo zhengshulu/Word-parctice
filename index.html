@@ -36,6 +36,7 @@ button{padding:10px 14px;border:none;border-radius:10px;font-size:14px;cursor:po
 .btn-outline{border:1px solid #32bc9c;color:#32bc9c;background:#fff}
 .btn-warning{background:#f59e0b;color:#fff}
 .btn-small{padding:4px 8px;font-size:13px;flex:none}
+.btn-fill-lg{padding:14px 14px;font-size:16px;flex:none;width:100%;}
 input[type="file"]{display:none}
 .file-label{padding:10px 14px;border:1px solid #32bc9c;color:#32bc9c;background:#fff;border-radius:10px;cursor:pointer;font-size:14px;display:inline-block;flex:1;text-align:center;}
 .tip{font-size:13px;color:#666;margin:8px 0}
@@ -78,7 +79,7 @@ input[type="file"]{display:none}
 .print-modal-mask{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;z-index:101;padding:16px;overflow-y:auto}
 .print-modal{background:#fff;border-radius:16px;max-width:820px;margin:0 auto;padding:16px}
 .print-iframe-wrap{width:100%;height:70vh;border:1px solid #ddd;border-radius:8px}
-.subject-switch{display:flex;gap:12px;margin:10px 0;}
+.subject-switch{display:flex;gap:12px;margin:10px 0;flex-wrap:wrap;}
 .subject-switch input{display:none;}
 .subject-switch label{cursor:pointer;padding:6px 12px;border-radius:8px;border:1px solid #32bc9c;}
 .subject-switch input:checked+label{background:#32bc9c;color:#fff;}
@@ -90,7 +91,7 @@ input[type="file"]{display:none}
 <body>
 <div class="container">
 <div id="page-home" class="page active">
-  <h2> 🦜小和尚鹦鹉贝儿,你好呀 👋</h2>
+  <h2> 🦜字词错题本 👋</h2>
   <div class="sub-title" id="homeDate"></div>
   <div class="card">
     <div class="subject-switch">
@@ -141,15 +142,15 @@ input[type="file"]{display:none}
         <label for="inpSubEn">🔤英语</label>
       </div>
     </div>
-    <div class="tip">语文：词语｜拼音｜释义｜例句｜易错；英语：单词｜音标｜中文释义｜例句｜变形提示</div>
+    <div class="tip">语文：词语｜拼音｜释义｜例句；英语：单词｜音标｜中文释义｜例句｜变形提示</div>
     <textarea class="textarea-sm" placeholder="词语/单词" id="inpWord"></textarea>
     <div class="btn-row">
-      <button class="btn-warning btn-small" onclick="smartFillDict()">🔍智能填充(拼音/音标/释义/例句)</button>
+      <button class="btn-warning btn-fill-lg" onclick="smartFillDict()">🔍智能填充(拼音/音标/释义/例句)</button>
     </div>
     <textarea class="textarea-sm" placeholder="拼音/音标" id="inpPinyin"></textarea>
     <textarea class="textarea-sm" placeholder="释义/中文释义" id="inpMeaning"></textarea>
     <textarea placeholder="例句（可选）" id="inpExample" rows="2"></textarea>
-    <textarea placeholder="易错/变形提示（可选）" id="inpWrong" rows="2"></textarea>
+    <textarea placeholder="变形提示（可选）" id="inpWrong" rows="2"></textarea>
     <button class="btn-green" onclick="addSingleWord()" style="width:100%;margin-top:12px">保存词条</button>
   </div>
 
@@ -179,8 +180,8 @@ input[type="file"]{display:none}
     <div id="engRevModeWrap" class="modal-row" style="display:none;">
       <label>英语复习模式</label>
       <div style="display:flex;gap:10px">
-        <label><input type="radio" name="engMode" value="phonetic" checked>显示音标默写单词</label>
-        <label><input type="radio" name="engMode" value="meaning">显示中文释义默写单词</label>
+        <label><input type="radio" name="engMode" value="phonetic">显示音标默写单词</label>
+        <label><input type="radio" name="engMode" value="meaning" checked>显示中文释义默写单词</label>
       </div>
     </div>
     <div class="modal-row">
@@ -207,24 +208,6 @@ input[type="file"]{display:none}
 
 <div id="page-wordlib" class="page">
   <h2>词库管理</h2>
-  <div class="card">
-    <div class="subject-switch">
-      <div>
-        <input type="radio" name="libSubject" id="libSubAll" value="all">
-        <label for="libSubAll">全部</label>
-      </div>
-      <div>
-        <input type="radio" name="libSubject" id="libSubCn" value="chinese">
-        <label for="libSubCn">📖语文</label>
-      </div>
-      <div>
-        <input type="radio" name="libSubject" id="libSubEn" value="english">
-        <label for="libSubEn">🔤英语</label>
-      </div>
-    </div>
-    <div class="tip">请选择科目单选框加载词条列表，页面默认不展示词条，避免一次性渲染大量内容卡顿</div>
-  </div>
-
   <div class="card">
     <h3>备份导入导出</h3>
     <div class="tip">JSON导入导出完整保留科目、复习等级；粘贴文本省略subject默认语文</div>
@@ -292,6 +275,20 @@ input[type="file"]{display:none}
   <div class="card">
     <h3>搜索词条</h3>
     <input type="text" id="libSearchInput" placeholder="输入词语/单词搜索" style="width:100%;padding:10px;border:1px solid #ddeae3;border-radius:12px;font-size:15px;">
+    <div class="subject-switch" style="margin-top:12px;">
+      <div>
+        <input type="radio" name="libSubject" id="libSubAll" value="all">
+        <label for="libSubAll">全部</label>
+      </div>
+      <div>
+        <input type="radio" name="libSubject" id="libSubCn" value="chinese">
+        <label for="libSubCn">📖语文</label>
+      </div>
+      <div>
+        <input type="radio" name="libSubject" id="libSubEn" value="english">
+        <label for="libSubEn">🔤英语</label>
+      </div>
+    </div>
   </div>
   <h3>全部词条（按level从低到高）</h3>
   <div id="libPreview"></div>
@@ -353,7 +350,7 @@ input[type="file"]{display:none}
       <textarea id="editExample" rows="2"></textarea>
     </div>
     <div class="modal-row">
-      <label>易错/变形提示</label>
+      <label>变形提示</label>
       <textarea id="editWrong" rows="2"></textarea>
     </div>
     <div class="modal-row">
@@ -398,55 +395,46 @@ const META_KEY = "wordReviewMeta";
 let wordList = [];
 let batchReviewItems = [];
 let todayDoneCount = 0;
-let cnDict = {};   // dict.json 语文词典
-let enDict = {};   // Englishdict.json 英语词典
+let cnDict = {};
+let enDict = {};
 let isAnswerShown = false;
 const SRS_INTERVAL_DAYS = [0,2,4,7,14,30,60,100];
 const SRS_INTERVALS = SRS_INTERVAL_DAYS.map(d => 1000 * 60 * 60 * 24 * d);
 
-//并行加载两份独立词典
 async function loadAllDict(){
   try{
     const resCn = await fetch("./dict.json");
     if(resCn.ok) cnDict = await resCn.json();
-  }catch(err){ console.warn("dict.json(语文词典)加载失败:",err.message); }
-
+  }catch(err){ console.warn("dict.json加载失败:",err.message); }
   try{
     const resEn = await fetch("./Englishdict.json");
     if(resEn.ok) enDict = await resEn.json();
-  }catch(err){ console.warn("Englishdict.json(英语词典)加载失败:",err.message); }
-  console.log("词典加载完成，语文词条："+Object.keys(cnDict).length+"，英语词条："+Object.keys(enDict).length);
+  }catch(err){ console.warn("Englishdict.json加载失败:",err.message); }
 }
 
-//智能填充：根据当前录入科目自动选择对应词典
 function smartFillDict(){
   const currentSubject = document.querySelector('input[name="inpSubject"]:checked').value;
   const w = document.getElementById("inpWord").value.trim();
   if(!w){ alert("请先输入词语/单词"); return; }
-
   let dictItem = null;
-  if(currentSubject === "chinese"){
-    dictItem = cnDict[w];
-  }else{
-    dictItem = enDict[w];
-  }
-
+  if(currentSubject === "chinese") dictItem = cnDict[w];
+  else dictItem = enDict[w];
   if(!dictItem){
-    alert("⚠️当前科目词典中未找到该词条，请确认词典文件部署在仓库根目录。");
+    alert("⚠️词典中未找到该词条");
     return;
   }
   if(dictItem.pinyin) document.getElementById("inpPinyin").value = dictItem.pinyin;
   if(dictItem.meaning) document.getElementById("inpMeaning").value = dictItem.meaning;
   if(dictItem.example){
-    let processedExample = dictItem.example.replaceAll(w, dictItem.pinyin);
+    let processedExample = dictItem.example.replaceAll(w, dictItem.pinyin||w);
     document.getElementById("inpExample").value = processedExample;
   }
 }
 
-// 科目联动显示英语复习模式
 document.querySelectorAll('input[name="revSubject"]').forEach(r=>{
   r.onchange = ()=>{
     document.getElementById("engRevModeWrap").style.display = r.value==="english"?"block":"none";
+    startBatchReview();
   }
 })
 document.getElementById("paperSubject").onchange = function(){
@@ -457,7 +445,6 @@ document.getElementById("paperSource").onchange = function(){
   wrap.classList.toggle("show", this.value==="level");
 }
 
-// 词库页面单选切换科目，触发渲染列表；刚进入页面libPreview为空
 document.querySelectorAll('input[name="libSubject"]').forEach(r=>{
   r.onchange = ()=>{ renderLibPreview(); }
 })
@@ -470,7 +457,6 @@ function switchPage(name){
   refreshUI();
   if(name === "review") startBatchReview();
   if(name === "stat") renderStatPage();
-  //切到词库页面，清空列表，等待用户点击科目单选
   if(name === "wordlib"){
     document.getElementById("libPreview").innerHTML = "<div class='tip'>请上方选择科目单选框加载词条</div>";
   }
@@ -501,8 +487,6 @@ function renderStatPage(){
   document.getElementById("topErrorListEn").innerHTML = htmlEn;
   document.getElementById("statSelectDate").value = getYmd(new Date());
   document.getElementById("simDueWrap").innerHTML = "";
-  document.getElementById("statCn").innerText = cnWords.length;
-  document.getElementById("statEn").innerText = enWords.length;
 }
 
 function getSimDueWords(ymdStr){
@@ -532,7 +516,6 @@ function saveMeta(){
 function loadData(){
   const raw = localStorage.getItem(STORAGE_KEY);
   if(raw) wordList = JSON.parse(raw);
-  //旧数据迁移，无subject默认语文
   wordList.forEach(it=>{
     if(it.subject === undefined || !["chinese","english"].includes(it.subject)) it.subject = "chinese";
     if(it.example === undefined) it.example = "";
@@ -665,7 +648,6 @@ function batchAddWords(){
   alert(`完成：新增${add}条，更新已有词条${update}条`);
 }
 
-//词库渲染，切换单选科目才加载
 function renderLibPreview(){
   const pre = document.getElementById("libPreview");
   const searchText = (document.getElementById("libSearchInput")?.value || "").trim().toLowerCase();
@@ -847,10 +829,6 @@ function renderBatchReview(){
       ${item.wrongText ? `<div class="review-hint">提示：${item.wrongText}</div>`:""}
       ${item.example ? `<div class="review-example">${item.example}</div>`:""}
       <div class="review-answer" id="ans-${bIdx}">答案：${item.word}</div>
-      <div class="review-buttons">
-        <button class="btn-green btn-small">✅答对</button>
-        <button class="btn-red btn-small">❌答错</button>
-      </div>
     </div>
     `
   })
@@ -906,106 +884,30 @@ function finishMarkedReview(){
       wordList[mainIdx].level = Math.min(wordList[mainIdx].level,7);
       const lv = wordList[mainIdx].level;
       wordList[mainIdx].nextReview = new Date(nowTs + SRS_INTERVALS[lv]).toISOString();
-      todayDoneCount +=1; saveMeta(); okCnt++;
+      okCnt++;
     }else{
       wordList[mainIdx].level = 0;
       wordList[mainIdx].failCount +=1;
-      wordList[mainIdx].nextReview = new Date(nowTs).toISOString();
+      wordList[mainIdx].nextReview = new Date(nowTs + SRS_INTERVALS[0]).toISOString();
       failCnt++;
     }
   })
+  todayDoneCount += batchReviewItems.length;
+  saveMeta();
   saveData();
-  alert(`本次保存：答对${okCnt}条，答错${failCnt}条`);
+  alert(`批改完成 ✅答对${okCnt}｜❌答错${failCnt}`);
   startBatchReview();
 }
 
-function getPaperSourceWords(){
-  const subj = document.getElementById("paperSubject").value;
-  const sel = document.getElementById("paperSource").value;
-  let arr = wordList.filter(x=>x.subject === subj);
-  if(sel === "due") arr = arr.filter(w=> new Date(w.nextReview) <= new Date());
-  else if(sel === "level"){
-    const minLv = Number(document.getElementById("lvMin").value)||0;
-    const maxLv = Number(document.getElementById("lvMax").value)||7;
-    arr = arr.filter(w=>w.level >= minLv && w.level <= maxLv);
-  }
-  return arr;
-}
-
-function openPaperPreview(){
-  const list = getPaperSourceWords();
-  const subj = document.getElementById("paperSubject").value;
-  const engPaperMode = document.getElementById("paperEngMode").value;
-  const withEx = document.getElementById("paperWithExample").checked;
-  const withAns = document.getElementById("paperWithAnswer").checked;
-  const cont = document.getElementById("paperContent");
-  let titleText = subj==="chinese"?"看拼音写词语":"看音标/中文写单词";
-  let html = `<div class="paper-title">${titleText}</div>`;
-  list.forEach((it,idx)=>{
-    let promptText = it.pinyin;
-    if(subj==="english" && engPaperMode==="meaning") promptText = it.meaning;
-    html += `<div class="paper-line">${idx+1}. ${promptText}<span class="paper-blank"></span></div>`;
-    if(withEx && it.example){ html += `<div class="paper-example">${it.example}</div>`; }
-  })
-  if(withAns){
-    html += `<hr style="margin:40px 0;"><div class="paper-title">参考答案</div>`;
-    list.forEach((it,idx)=>{ html += `<div class="paper-line">${idx+1}. ${it.word}</div>`; })
-  }
-  cont.innerHTML = html;
-  document.getElementById("paperModal").style.display="block";
-}
-function closePaperModal(){ document.getElementById("paperModal").style.display="none"; }
-
-function openPrintWindow(){
-  const list = getPaperSourceWords();
-  const subj = document.getElementById("paperSubject").value;
-  const engPaperMode = document.getElementById("paperEngMode").value;
-  const withEx = document.getElementById("paperWithExample").checked;
-  const withAns = document.getElementById("paperWithAnswer").checked;
-  const iframe = document.getElementById("printIframe");
-  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-  let titleText = subj==="chinese"?"看拼音写词语":"看音标/中文写单词";
-  let html = `
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf‑8">
-<style>
-body{padding:30px;font-size:18px;}
-.title{text-align:center;font-size:22px;font-weight:bold;margin-bottom:24px}
-.line{margin:14px 0}
-.ex{font-size:15px;color:#444;margin:4px 0 10px 24px;font-style:italic}
-.blank{display:inline-block;border-bottom:1px solid #000;width:140px;margin-left:10px;vertical-align:bottom}
-hr{margin:40px 0;}
-</style>
-</head>
-<body>
-<div class="title">${titleText}</div>
-`;
-  list.forEach((it,idx)=>{
-    let promptText = it.pinyin;
-    if(subj==="english" && engPaperMode==="meaning") promptText = it.meaning;
-    html += `<div class="line">${idx+1}. ${promptText}<span class="blank"></span></div>`;
-    if(withEx && it.example) html += `<div class="ex">${it.example}</div>`;
-  })
-  if(withAns){
-    html += `<hr><div class="title">参考答案</div>`;
-    list.forEach((it,idx)=>{ html += `<div class="line">${idx+1}. ${it.word}</div>`; })
-  }
-  html += "</body></html>";
-  iframeDoc.open(); iframeDoc.write(html); iframeDoc.close();
-  document.getElementById("printModal").style.display="block";
-}
-document.getElementById("triggerPrintBtn").onclick = function(){
-  const iframe = document.getElementById("printIframe");
-  iframe.contentWindow.print();
-}
-function closePrintModal(){ document.getElementById("printModal").style.display="none"; }
+//试卷打印占位
+function openPaperPreview(){}
+function openPrintWindow(){}
+function closePaperModal(){}
+function closePrintModal(){}
 
 window.onload = async function(){
   await loadAllDict();
   loadData();
-  document.getElementById("libSearchInput")?.addEventListener("input",()=>{ renderLibPreview(); })
 }
 </script>
 </body>
