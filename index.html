@@ -905,6 +905,15 @@ function openPrintWindow(){}
 function closePaperModal(){}
 function closePrintModal(){}
 
+  //词库搜索框防抖实时搜索
+let libSearchTimer = null;
+document.getElementById("libSearchInput").addEventListener("input",function(){
+    clearTimeout(libSearchTimer);
+    libSearchTimer = setTimeout(()=>{
+        renderLibPreview();
+    }, 220);
+});
+
 window.onload = async function(){
   await loadAllDict();
   loadData();
