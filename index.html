@@ -39,7 +39,6 @@ button{padding:10px 14px;border:none;border-radius:10px;font-size:14px;cursor:po
 .btn-small{padding:4px 8px;font-size:13px;flex:none}
 .btn-fill-lg{padding:14px 14px;font-size:16px;flex:none;width:100%;}
 input[type="file"]{display:none}
-input[type="date"]{max-width:100%;box-sizing:border-box;font-size:16px}
 .file-label{padding:10px 14px;border:1px solid #32bc9c;color:#32bc9c;background:#fff;border-radius:10px;cursor:pointer;font-size:14px;display:inline-block;flex:1;text-align:center;}
 .tip{font-size:13px;color:#666;margin:8px 0}
 .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -55,7 +54,6 @@ input[type="date"]{max-width:100%;box-sizing:border-box;font-size:16px}
 .review-answer{font-size:30px;font-weight:bold;color:#209479;margin:8px 0;display:none}
 .review-buttons{display:none;gap:8px;margin-top:10px;align-items:center}
 .done-tag{font-size:22px;font-weight:bold;margin-left:8px;line-height:1;}
-/*顶部汇总答案区域 */
 .top-answer-wrap{background:#eef8f4;border-radius:12px;padding:14px;margin-bottom:14px;display:none;}
 .top-answer-title{font-weight:bold;font-size:17px;margin-bottom:10px;}
 .top-answer-item{display:inline-block;padding:6px 10px;margin:4px;border:1px solid #b8ddd0;border-radius:6px;cursor:pointer;font-size:20px;}
@@ -85,18 +83,6 @@ input[type="date"]{max-width:100%;box-sizing:border-box;font-size:16px}
 .subject-switch input:checked+label{background:#32bc9c;color:#fff;}
 @media print{
   .print-btn-area{display:none !important;}
-}
-input[type="date"] {
-  width: 100%;
-  box-sizing: border-box;
-  font-size: 16px;
-}
-input[type="date"]::-webkit-calendar-picker-indicator {
-  scale: 0.82;
-  margin-left: 2px;
-}
-input[type="date"]::-webkit-date-and-time-value {
-  text-align: center;
 }
 </style>
 </head>
@@ -310,8 +296,9 @@ input[type="date"]::-webkit-date-and-time-value {
     <h3>选择日期，模拟查看该日期待复习词条</h3>
     <div class="modal-row">
       <label>选择日期</label>
-      <div style="width:100%; box-sizing:border-box; overflow:hidden;">
-      <input type="date" id="statSelectDate">
+      <div style="position:relative;margin:8px 0;">
+        <div id="dateDisplay" style="padding:14px 20px; text-align:center; border:1px solid #ccc; border-radius:12px; background:#eeeeee; font-size:16px;">2026年09月09日</div>
+        <input type="date" id="statSelectDate" style="position:absolute; inset:0; width:100%; height:100%; opacity:0; box-sizing:border-box;">
       </div>
     </div>
     <button class="btn-green" onclick="renderSimDueList()">模拟查询该日待复习</button>
@@ -402,6 +389,15 @@ let enDict = {};
 let isAnswerShown = false;
 const SRS_INTERVAL_DAYS = [0,2,4,7,14,30,60,100];
 const SRS_INTERVALS = SRS_INTERVAL_DAYS.map(d => 1000 * 60 * 60 * 24 * d);
+
+function formatDateToCN(dateStr){
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}年${m}月${day}日`;
+}
+
 async function loadAllDict(){
   try{
     const resCn = await fetch("./dict.json");
@@ -480,7 +476,6 @@ function renderStatPage(){
   else sortErrEn.forEach((w,i)=> htmlEn+=`<div class="word-item"><div>${i+1}. <strong>${w.word}</strong>｜${w.pinyin||""}｜答错次数：${w.failCount}</div></div>`);
   document.getElementById("topErrorListCn").innerHTML = htmlCn;
   document.getElementById("topErrorListEn").innerHTML = htmlEn;
-  document.getElementById("statSelectDate").value = getYmd(new Date());
   document.getElementById("simDueWrap").innerHTML = "";
 }
 function getSimDueWords(ymdStr){
@@ -490,7 +485,7 @@ function getSimDueWords(ymdStr){
 function renderSimDueList(){
   const sel = document.getElementById("statSelectDate").value;
   const list = getSimDueWords(sel);
-  let html = `<div class="tip">${sel} 模拟待复习：共${list.length}条</div>`;
+  let html = `<div class="tip">${formatDateToCN(sel)} 模拟待复习：共${list.length}条</div>`;
   if(list.length===0){
     html += `<div class="tip">该日期没有到期词条</div>`;
   }else{
@@ -797,7 +792,6 @@ function startBatchReview(){
   const maxCnt = Number(document.getElementById("maxReviewCnt").value)||20;
   const selSubj = document.querySelector('input[name="revSubject"]:checked').value;
   const allDue = getDueWords().filter(x=>x.subject === selSubj);
-  // 排序：level升序（越不熟悉越靠前），同level答错次数failCount降序
   allDue.sort((a,b)=>{
     if(a.level !== b.level) return a.level - b.level;
     return b.failCount - a.failCount;
@@ -895,12 +889,10 @@ function finishMarkedReview(){
   alert(`批改完成 ✅答对${okCnt}｜❌答错${failCnt}`);
   startBatchReview();
 }
-//试卷打印占位
 function openPaperPreview(){}
 function openPrintWindow(){}
 function closePaperModal(){}
 function closePrintModal(){}
-  //词库搜索框防抖实时搜索
 let libSearchTimer = null;
 document.getElementById("libSearchInput").addEventListener("input",function(){
     clearTimeout(libSearchTimer);
@@ -908,9 +900,22 @@ document.getElementById("libSearchInput").addEventListener("input",function(){
         renderLibPreview();
     }, 220);
 });
+
 window.onload = async function(){
   await loadAllDict();
   loadData();
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth()+1).padStart(2,'0');
+  const day = String(today.getDate()).padStart(2,'0');
+  const isoDate = `${y}-${m}-${day}`;
+  const dateInput = document.getElementById('statSelectDate');
+  const dateDisplay = document.getElementById('dateDisplay');
+  dateInput.value = isoDate;
+  dateDisplay.innerText = formatDateToCN(isoDate);
+  dateInput.addEventListener('change', function(){
+    dateDisplay.innerText = formatDateToCN(this.value);
+  })
 }
 </script>
 </body>
