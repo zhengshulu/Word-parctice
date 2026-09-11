@@ -350,6 +350,11 @@ input[type="file"]{display:none}
       <label>手动设置Level(0‑7)</label>
       <input type="number" id="editLevel" min="0" max="7" value="0">
     </div>
+    <div class="modal-row">
+      <label>手动设置答错次数</label>
+      <input type="number" id="editFailCount" min="0" value="0">
+    </div>
+
     <div class="modal-btn-group">
       <button class="btn-green" onclick="saveEdit()">保存</button>
       <button class="btn-outline" onclick="closeEditModal()">取消</button>
@@ -704,6 +709,8 @@ function openEditModal(index){
   document.getElementById("editExample").value = item.example||"";
   document.getElementById("editWrong").value = item.wrongText||"";
   document.getElementById("editLevel").value = item.level ?? 0;
+  //新增读取答错次数
+  document.getElementById("editFailCount").value = item.failCount ?? 0;
   document.getElementById("editModal").style.display="flex";
 }
 function closeEditModal(){ document.getElementById("editModal").style.display="none"; }
@@ -716,8 +723,13 @@ function saveEdit(){
   const newEx = document.getElementById("editExample").value.trim();
   const newWrong = document.getElementById("editWrong").value.trim();
   let newLv = Number(document.getElementById("editLevel").value);
+  let newFailCnt = Number(document.getElementById("editFailCount").value);
+
   newLv = Math.max(0, Math.min(7, newLv));
+  newFailCnt = Math.max(0, newFailCnt);
+
   if(!newWord) return alert("词语/单词不能为空");
+
   wordList[idx].subject = newSub;
   wordList[idx].word = newWord;
   wordList[idx].pinyin = newPy;
@@ -725,10 +737,17 @@ function saveEdit(){
   wordList[idx].example = newEx;
   wordList[idx].wrongText = newWrong;
   wordList[idx].level = newLv;
+  wordList[idx].failCount = newFailCnt;
+
+  //修复BUG：修改level同步更新复习到期时间
+  const nowTs = Date.now();
+  wordList[idx].nextReview = new Date(nowTs + SRS_INTERVALS[newLv]).toISOString();
+
   saveData();
   closeEditModal();
   renderLibPreview();
 }
+
 document.getElementById("inJson").onchange = async function (e) {
   const file = e.target.files[0];
   if (!file) return;
