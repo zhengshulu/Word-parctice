@@ -269,15 +269,15 @@ input[type="file"]{display:none}
     <input type="text" id="libSearchInput" placeholder="输入词语/单词搜索" style="width:100%;padding:10px;border:1px solid #ddeae3;border-radius:12px;font-size:15px;">
     <div class="subject-switch" style="margin-top:12px;">
       <div>
-        <input type="radio" name="libSubject" id="libSubAll" value="all">
+        <input type="radio" name="libSubject" id="libSubAll" value="all" onchange="renderLibPreview()">
         <label for="libSubAll">全部</label>
       </div>
       <div>
-        <input type="radio" name="libSubject" id="libSubCn" value="chinese">
+        <input type="radio" name="libSubject" id="libSubCn" value="chinese" onchange="renderLibPreview()">
         <label for="libSubCn">📖语文</label>
       </div>
       <div>
-        <input type="radio" name="libSubject" id="libSubEn" value="english">
+        <input type="radio" name="libSubject" id="libSubEn" value="english" onchange="renderLibPreview()">
         <label for="libSubEn">🔤英语</label>
       </div>
     </div>
@@ -294,6 +294,19 @@ input[type="file"]{display:none}
   </div>
   <div class="card">
     <h3>选择日期，模拟查看该日期待复习词条</h3>
+    <div class="modal-row">
+      <label>模拟查询科目</label>
+      <div class="subject-switch">
+        <div>
+          <input type="radio" name="statSimSubj" id="statSimCn" value="chinese" checked onchange="renderSimDueList()">
+          <label for="statSimCn">📖语文</label>
+        </div>
+        <div>
+          <input type="radio" name="statSimSubj" id="statSimEn" value="english" onchange="renderSimDueList()">
+          <label for="statSimEn">🔤英语</label>
+        </div>
+      </div>
+    </div>
     <div class="modal-row">
       <label>选择日期</label>
       <div style="position:relative;margin:8px 0;">
@@ -354,7 +367,6 @@ input[type="file"]{display:none}
       <label>手动设置答错次数</label>
       <input type="number" id="editFailCount" min="0" value="0">
     </div>
-
     <div class="modal-btn-group">
       <button class="btn-green" onclick="saveEdit()">保存</button>
       <button class="btn-outline" onclick="closeEditModal()">取消</button>
@@ -413,6 +425,11 @@ async function loadAllDict(){
     if(resEn.ok) enDict = await resEn.json();
   }catch(err){ console.warn("Englishdict.json加载失败:",err.message); }
 }
+
+document.getElementById('statSelectDate').addEventListener('change', function(){
+  document.getElementById('dateDisplay').innerText = formatDateToCN(this.value);
+})
+
 function smartFillDict(){
   const currentSubject = document.querySelector('input[name="inpSubject"]:checked').value;
   const w = document.getElementById("inpWord").value.trim();
@@ -431,22 +448,23 @@ function smartFillDict(){
     document.getElementById("inpExample").value = processedExample;
   }
 }
+
 document.querySelectorAll('input[name="revSubject"]').forEach(r=>{
   r.onchange = ()=>{
     document.getElementById("engRevModeWrap").style.display = r.value==="english"?"block":"none";
     startBatchReview();
   }
 })
+
 document.getElementById("paperSubject").onchange = function(){
   document.getElementById("paperEngModeWrap").style.display = this.value==="english"?"block":"none";
 }
+
 document.getElementById("paperSource").onchange = function(){
   const wrap = document.getElementById("levelRangeWrap");
   wrap.classList.toggle("show", this.value==="level");
 }
-document.querySelectorAll('input[name="libSubject"]').forEach(r=>{
-  r.onchange = ()=>{ renderLibPreview(); }
-})
+
 function switchPage(name){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-"+name).classList.add("active");
@@ -459,15 +477,18 @@ function switchPage(name){
     document.getElementById("libPreview").innerHTML = "<div class='tip'>请上方选择科目单选框加载词条</div>";
   }
 }
+
 document.querySelectorAll(".nav-item").forEach(item=>{
   item.onclick = ()=>switchPage(item.dataset.page);
 })
+
 function getYmd(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,"0");
   const day = String(d.getDate()).padStart(2,"0");
   return `${y}-${m}-${day}`;
 }
+
 function renderStatPage(){
   const cnWords = wordList.filter(x=>x.subject==="chinese");
   const enWords = wordList.filter(x=>x.subject==="english");
@@ -483,28 +504,41 @@ function renderStatPage(){
   document.getElementById("topErrorListEn").innerHTML = htmlEn;
   document.getElementById("simDueWrap").innerHTML = "";
 }
+
 function getSimDueWords(ymdStr){
   const endOfDay = new Date(ymdStr + " 23:59:59");
   return wordList.filter(w=> new Date(w.nextReview) <= endOfDay);
 }
+
 function renderSimDueList(){
   const sel = document.getElementById("statSelectDate").value;
-  const list = getSimDueWords(sel);
-  let html = `<div class="tip">${formatDateToCN(sel)} 模拟待复习：共${list.length}条</div>`;
+  const simSubj = document.querySelector('input[name="statSimSubj"]:checked').value;
+  const endOfDay = new Date(sel + " 23:59:59");
+  const listRaw = wordList.filter(w=>{
+    return new Date(w.nextReview) <= endOfDay && w.subject === simSubj;
+  });
+  const list = [...listRaw].sort((a,b)=>{
+    if(a.level !== b.level) return a.level - b.level;
+    return b.failCount - a.failCount;
+  });
+
+  let html = `<div class="tip">${formatDateToCN(sel)}【${simSubj==='chinese'?'语文':'英语'}】模拟待复习：共${list.length}条</div>`;
   if(list.length===0){
-    html += `<div class="tip">该日期没有到期词条</div>`;
+    html += `<div class="tip">该日期该科目没有到期词条</div>`;
   }else{
     list.forEach((it,i)=>{
       const subTag = it.subject==="chinese"?"语文":"英语";
-      html += `<div class="word-item"><div>${i+1}. <strong>${it.word}</strong>【${it.pinyin||""}】 ${subTag} level:${it.level}</div></div>`;
+      html += `<div class="word-item"><div>${i+1}. <strong>${it.word}</strong>【${it.pinyin||""}】 ${subTag} level:${it.level} 答错:${it.failCount}</div></div>`;
     })
   }
   document.getElementById("simDueWrap").innerHTML = html;
 }
+
 function saveMeta(){
   const meta = { date:getTodayStrCN(), todayDoneCount:todayDoneCount }
   localStorage.setItem(META_KEY, JSON.stringify(meta));
 }
+
 function loadData(){
   const raw = localStorage.getItem(STORAGE_KEY);
   if(raw) wordList = JSON.parse(raw);
@@ -529,10 +563,12 @@ function loadData(){
   document.getElementById("homeDate").innerText = getTodayStrCN();
   refreshUI();
 }
+
 function saveData(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(wordList));
   refreshUI();
 }
+
 function refreshUI(){
   const cn = wordList.filter(x=>x.subject==="chinese").length;
   const en = wordList.filter(x=>x.subject==="english").length;
@@ -548,15 +584,18 @@ function refreshUI(){
   document.getElementById("statToday").innerText = todayDoneCount;
   document.getElementById("homeTip").innerText = needReview.length>0 ? `今日还有 ${needReview.length} 个词条待复习`:"今天没有复习任务，棒棒哒！";
 }
+
 function getTodayStrCN(){
   const d=new Date();
   const weekArr=["周日","周一","周二","周三","周四","周五","周六"];
   return `${d.getMonth()+1}月${d.getDate()}日，${weekArr[d.getDay()]}`;
 }
+
 function getDueWords(){
   const now=new Date();
   return wordList.filter(w=> new Date(w.nextReview) <= now);
 }
+
 function mergeImportItem(incoming, fullOverride=false) {
   const w = (incoming.word || "").trim();
   if (!w) return {isNew:false,skip:true};
@@ -606,6 +645,7 @@ function mergeImportItem(incoming, fullOverride=false) {
     return {isNew:true,skip:false};
   }
 }
+
 function addSingleWord(){
   const subj = document.querySelector('input[name="inpSubject"]:checked').value;
   const w = document.getElementById("inpWord").value.trim();
@@ -626,6 +666,7 @@ function addSingleWord(){
   document.getElementById("inpMeaning").value="";document.getElementById("inpExample").value="";document.getElementById("inpWrong").value="";
   alert("添加成功，该词条已进入今日复习队列");
 }
+
 function batchAddWords(){
   const txt = document.getElementById("batchText").value.trim();
   if(!txt) return alert("请粘贴词条");
@@ -648,14 +689,17 @@ function batchAddWords(){
   document.getElementById("batchText").value="";
   alert(`完成：新增${add}条，更新已有词条${update}条`);
 }
+
 function renderLibPreview(){
   const pre = document.getElementById("libPreview");
   const searchText = (document.getElementById("libSearchInput")?.value || "").trim().toLowerCase();
-  const filterSubj = document.querySelector('input[name="libSubject"]:checked')?.value;
-  if(!filterSubj){
+  const checkedRadio = document.querySelector('input[name="libSubject"]:checked');
+  if(!checkedRadio){
     pre.innerHTML="<div class='tip'>请上方选择科目单选框加载词条</div>";
     return;
   }
+  const filterSubj = checkedRadio.value;
+
   let filtered = [...wordList];
   if(filterSubj !== "all") filtered = filtered.filter(x=>x.subject === filterSubj);
   const sorted = filtered.sort((a,b)=>{
@@ -692,6 +736,7 @@ function renderLibPreview(){
   })
   pre.innerHTML = html;
 }
+
 function deleteWord(index){
   const item = wordList[index];
   if(!confirm(`确定要删除词条【${item.word}】吗？删除后不可恢复！`)) return;
@@ -699,6 +744,7 @@ function deleteWord(index){
   saveData();
   renderLibPreview();
 }
+
 function openEditModal(index){
   const item = wordList[index];
   document.getElementById("editIndex").value = index;
@@ -709,11 +755,12 @@ function openEditModal(index){
   document.getElementById("editExample").value = item.example||"";
   document.getElementById("editWrong").value = item.wrongText||"";
   document.getElementById("editLevel").value = item.level ?? 0;
-  //新增读取答错次数
   document.getElementById("editFailCount").value = item.failCount ?? 0;
   document.getElementById("editModal").style.display="flex";
 }
+
 function closeEditModal(){ document.getElementById("editModal").style.display="none"; }
+
 function saveEdit(){
   const idx = Number(document.getElementById("editIndex").value);
   const newSub = document.getElementById("editSubject").value;
@@ -739,7 +786,6 @@ function saveEdit(){
   wordList[idx].level = newLv;
   wordList[idx].failCount = newFailCnt;
 
-  //修复BUG：修改level同步更新复习到期时间
   const nowTs = Date.now();
   wordList[idx].nextReview = new Date(nowTs + SRS_INTERVALS[newLv]).toISOString();
 
@@ -766,6 +812,7 @@ document.getElementById("inJson").onchange = async function (e) {
   } catch (err) { alert("JSON解析失败：" + err.message); }
   this.value = "";
 };
+
 document.getElementById("inExcel").onchange = function (e) {
   const f = e.target.files[0];
   if (!f) return;
@@ -795,20 +842,27 @@ document.getElementById("inExcel").onchange = function (e) {
   reader.readAsBinaryString(f);
   this.value = "";
 };
+
 function exportJson(){
   const blob = new Blob([JSON.stringify(wordList,null,2)],{type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "wordlib.json"; a.click(); URL.revokeObjectURL(a.href);
 }
+
 function exportExcel(){
   const ws = XLSX.utils.json_to_sheet(wordList);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"词库");
+  XLSX.utils.book_append_sheet(wb,ws,"wordlib");
   XLSX.writeFile(wb,"wordlib.xlsx");
 }
+
 function startBatchReview(){
-  const maxCnt = Number(document.getElementById("maxReviewCnt").value)||20;
+  const rawVal = document.getElementById("maxReviewCnt").value;
+  let maxCnt = Number(rawVal);
+  if(isNaN(maxCnt) || maxCnt < 1){
+    maxCnt = 20;
+  }
   const selSubj = document.querySelector('input[name="revSubject"]:checked').value;
   const allDue = getDueWords().filter(x=>x.subject === selSubj);
   allDue.sort((a,b)=>{
@@ -821,12 +875,15 @@ function startBatchReview(){
   const panel = document.getElementById("reviewBatchPanel");
   document.getElementById("topAnswerWrap").style.display="none";
   if(batchReviewItems.length===0){
-    tipEl.innerText = `暂无${selSubj==="chinese"?"语文":"英语"}待复习词条`; panel.style.display = "none"; return;
+    tipEl.innerText = `暂无${selSubj==="chinese"?"语文":"英语"}待复习词条`;
+    panel.style.display = "none";
+    return;
   }
-  tipEl.innerText = `待复习共 ${batchReviewItems.length} 条，请在纸上默写`;
+  tipEl.innerText = `本次加载${batchReviewItems.length}条，该科目全部到期${allDue.length}条`;
   panel.style.display = "block";
   renderBatchReview();
 }
+
 function renderBatchReview(){
   const selSubj = document.querySelector('input[name="revSubject"]:checked').value;
   const engMode = document.querySelector('input[name="engMode"]:checked')?.value;
@@ -848,6 +905,7 @@ function renderBatchReview(){
   })
   wrap.innerHTML = html;
 }
+
 function renderTopAnswerList(){
   const box = document.getElementById("topAnswerList");
   let html = "";
@@ -857,10 +915,12 @@ function renderTopAnswerList(){
   })
   box.innerHTML = html;
 }
+
 function toggleMark(bIdx){
   batchReviewItems[bIdx].marked = !batchReviewItems[bIdx].marked;
   renderTopAnswerList();
 }
+
 function showAllAnswer(){
   document.getElementById("topAnswerWrap").style.display="block";
   renderTopAnswerList();
@@ -869,6 +929,7 @@ function showAllAnswer(){
   })
   isAnswerShown = true;
 }
+
 function hideAllAnswer(){
   document.getElementById("topAnswerWrap").style.display="none";
   batchReviewItems.forEach((_,i)=>{
@@ -876,6 +937,7 @@ function hideAllAnswer(){
   })
   isAnswerShown = false;
 }
+
 function finishMarkedReview(){
   if(!isAnswerShown){
     alert("⚠️请先点击【显示全部答案】，标记完对错之后，才可以保存批改结果！");
@@ -908,10 +970,12 @@ function finishMarkedReview(){
   alert(`批改完成 ✅答对${okCnt}｜❌答错${failCnt}`);
   startBatchReview();
 }
+
 function openPaperPreview(){}
 function openPrintWindow(){}
 function closePaperModal(){}
 function closePrintModal(){}
+
 let libSearchTimer = null;
 document.getElementById("libSearchInput").addEventListener("input",function(){
     clearTimeout(libSearchTimer);
@@ -932,9 +996,6 @@ window.onload = async function(){
   const dateDisplay = document.getElementById('dateDisplay');
   dateInput.value = isoDate;
   dateDisplay.innerText = formatDateToCN(isoDate);
-  dateInput.addEventListener('change', function(){
-    dateDisplay.innerText = formatDateToCN(this.value);
-  })
 }
 </script>
 </body>
